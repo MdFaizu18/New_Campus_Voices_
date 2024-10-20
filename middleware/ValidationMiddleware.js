@@ -140,7 +140,19 @@ export const validateSatffInput = withValidationErrors([
 
 export const validateRatingInput = withValidationErrors([
     body("name").notEmpty().withMessage("Name is required"),
-    body("staffCode").notEmpty().withMessage("staff code is required"),
+    body("staffCode")
+        .notEmpty()
+        .withMessage("Staff Code is required")
+        .custom(async (value) => {
+            // Check if the staff code already exists in the database
+            const existingStaff = await staffModel.findOne({ staffCode: value });
+            if (existingStaff) {
+                // If a staff with the same code is found, throw an error
+                throw new Error("Staff code already exists. Please use a unique code.");
+            }
+            // If no staff with the same code is found, the validation will proceed
+            return true;
+        }),
     body("ratings")
         .isArray({ min: 1 })
         .withMessage("At least one rating is required"),

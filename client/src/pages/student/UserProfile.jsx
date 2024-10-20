@@ -64,6 +64,7 @@ export default function UserProfile() {
     const { data, stats } = useLoaderData();
     const userData = data.data.user;
     const [isEditing, setIsEditing] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [profileImage, setProfileImage] = useState(
         userData.profileImage || "/placeholder.svg?height=128&width=128"
@@ -87,6 +88,7 @@ export default function UserProfile() {
         if (file) {
             const formData = new FormData();
             formData.append("profileImage", file);
+            setLoading(true); // Start the loading state
 
             try {
                 // Update this URL to match your backend route
@@ -107,12 +109,17 @@ export default function UserProfile() {
                 console.error("Error uploading image:", error);
                 toast.error("Failed to update profile image");
             }
+            finally {
+                setLoading(false); // Stop the loading state
+            }
         }
     };
 
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
+
     const handlePasswordChange = useCallback(async () => {
         if (newPassword !== confirmPassword) {
             toast.error("New passwords do not match");
@@ -174,6 +181,12 @@ export default function UserProfile() {
                                     >
                                         <Camera size={20} />
                                     </button>
+                                    {loading && (
+                                        <div className="flex items-center justify-center mt-4">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                                            <span className="ml-2 text-blue-500">Uploading...</span>
+                                        </div>
+                                    )}
                                     <input
                                         type="file"
                                         ref={fileInputRef}

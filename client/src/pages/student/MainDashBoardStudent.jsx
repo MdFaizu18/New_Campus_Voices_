@@ -32,6 +32,7 @@ export default function MainDashboardStudent() {
     const [isDisabled, setIsDisabled] = useState(false);
     const [showMoreFeedback, setShowMoreFeedback] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [department,setDepartment]=useState(data.data.user.department);
 
     const navigate = useNavigate();
 
@@ -83,7 +84,7 @@ export default function MainDashboardStudent() {
         }
 
         try {
-            const response = await customFetch.post('/depart-ratings', { rating });
+            const response = await customFetch.post('/depart-ratings', { rating, department });
             if (response.status === 200) {
                 const submissionData = {
                     submissionDate: new Date().toISOString(),
@@ -98,6 +99,7 @@ export default function MainDashboardStudent() {
             toast.error("Error submitting rating");
         }
     };
+
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-100 to-indigo-200">

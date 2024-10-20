@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     Users,
     Star,
@@ -7,7 +7,7 @@ import {
     X,
     Home,
     User,
-    Trash2 ,
+    Trash2,
     LogOut,
     Menu,
     Bell,
@@ -18,6 +18,8 @@ import {
     Hash
 } from 'lucide-react'
 import AdminSidebar from '../../components/res/AdminSidebar'
+import customFetch from '../../utils/CustomFetch'
+import { toast } from 'react-toastify'
 
 // Mock data for staff members
 const staffMembers = [
@@ -31,8 +33,26 @@ const staffMembers = [
 
 const StaffRatingsReview = () => {
     const [selectedStaff, setSelectedStaff] = useState(null)
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [departRatings,setDepartRatings] = useState({})
     const [modalType, setModalType] = useState(null) // Added modalType state
+
+    useEffect(() => {
+        const departmentRatings = async () => {
+            try {
+                const response = await customFetch.get("/depart-ratings");
+                // Assuming the response contains an array of features
+                setDepartRatings(response.data); // Adjust 'response.data' based on your API structure
+            } catch (error) {
+                console.error("Failed to fetch user data", error);
+                toast.error("Failed to load features.");
+            }
+        };
+        departmentRatings();
+    }, []);
+
+    console.log(departRatings)
+   
 
 
     const handleDelete = (id) => {
@@ -50,12 +70,15 @@ const StaffRatingsReview = () => {
         { id: 5, staffId: 1, studentName: "Alice Johnson", date: "2023-05-14", comment: "Explains complex topics well.", rating: 4 },
         { id: 6, staffId: 6, studentName: "Alice Johnson", date: "2023-05-14", comment: "Explains complex topics well.", rating: 4 },
         { id: 7, staffId: 7, studentName: "Alice Johnson", date: "2023-05-14", comment: "Explains complex topics well.", rating: 4 },
-          // Add more mock comments as needed
+        // Add more mock comments as needed
     ])
 
     const totalStaff = staffMembers.length
     const totalReviews = staffMembers.reduce((sum, staff) => sum + staff.totalRatings, 0)
-    const overallRating = (staffMembers.reduce((sum, staff) => sum + staff.rating, 0) / totalStaff).toFixed(1)
+    const overallRating = departRatings.totalRatingsCount
+        ? (departRatings.totalRating / departRatings.totalRatingsCount).toFixed(1)
+        : "0.0";
+
 
     const topStaff = [...staffMembers].sort((a, b) => b.rating - a.rating).slice(0, 5)
 
@@ -173,17 +196,24 @@ const StaffRatingsReview = () => {
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm uppercase text-gray-600">Overall Rating</p>
-                                        <h3 className="text-3xl font-bold text-purple-600">{overallRating}</h3>
+                                        <p className="text-sm uppercase text-gray-600">Department Rating</p>
+                                        <h3 className="text-3xl font-bold text-purple-600">
+                                            {overallRating}
+                                            <span className="text-sm font-medium text-gray-400">
+                                                {" "}
+                                               ( Avg of {departRatings.totalRatingsCount} members )
+                                            </span>
+                                        </h3>
                                     </div>
                                     <Star className="h-10 w-10 text-yellow-400 opacity-75" />
                                 </div>
                             </div>
+
                         </div>
 
 
 
-                        
+
 
 
                         {/* Staff ratings list */}
@@ -234,7 +264,7 @@ const StaffRatingsReview = () => {
                                                     >
                                                         View Details
                                                     </button>
-                                                  
+
                                                 </td>
                                             </tr>
                                         ))}
@@ -268,7 +298,7 @@ const StaffRatingsReview = () => {
                                         <div key={comment.id} className="bg-gray-50 rounded-lg p-4 mb-4 shadow">
                                             <div className="flex justify-between items-center mb-2">
                                                 <span className="font-semibold text-purple-600">{comment.studentName}</span>
-                                                <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                                     <span className="text-sm text-gray-500">{comment.date}</span>
                                                     <button
                                                         // className="text-red-500 text-sm mt-2 hover:underline"
@@ -276,13 +306,13 @@ const StaffRatingsReview = () => {
 
                                                         onClick={() => handleDelete(comment.id)}
                                                     >
-                                                        <Trash2/>
+                                                        <Trash2 />
                                                     </button>
                                                 </div>
                                             </div>
                                             <p className="text-gray-700 mb-2">{comment.comment}</p>
                                             <StarRating rating={comment.rating} />
-                                           
+
                                         </div>
                                     ))}
                                 </div>
