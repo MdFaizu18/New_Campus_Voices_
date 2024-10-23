@@ -13,6 +13,7 @@ export const createFeature = async (req, res) => {
 
 // to get all the features 
 export const getFeature = async (req, res) => {
+
     try {
         const features = await featureModel.find();
         res.status(200).json(features);

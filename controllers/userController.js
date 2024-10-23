@@ -16,6 +16,20 @@ export const getCurrentUser = async (req, res) => {
         res.status(500).json({ msg: 'error in current user', error })
     }
 }
+
+
+// Controller to get the count of users with the role 'user'
+export const getUsersCount = async (req, res) => {
+    try {
+        const userCount = await userModel.countDocuments({ role: 'user' });
+        res.status(200).json({ userCount });
+    } catch (error) {
+        res.status(500).json({ msg: 'Error in getting user count', error });
+    }
+};
+
+
+
 export const updateUser = async (req, res) => {
     try {
         console.log("Update user function called");

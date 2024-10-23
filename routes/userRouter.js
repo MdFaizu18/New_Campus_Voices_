@@ -10,12 +10,13 @@ const upload = multer({
     },
 });
 
-import { changePassword, getCurrentUser, getUserById, updateUser } from "../controllers/userController.js";
+import { changePassword, getCurrentUser, getUserById, getUsersCount, updateUser } from "../controllers/userController.js";
 import multer from "multer";
 
 router.use(authenticateUser);
 
 router.get("/", authenticateUser, getCurrentUser);
+router.get("/count", getUsersCount);
 // router.patch('/', changePassword);
 router.route("/:id").patch(changePassword);
 router.patch(

@@ -63,7 +63,7 @@ export const getUserAllFeedback = async (req, res) => {
         const normalFeedbacksCount = normalFeedbacks.length;
 
         // Fetch personal feedbacks
-        const personalFeedbacks = await feedbackModel.find({ ...queryObject, messageType: 'personal' });
+        const personalFeedbacks = await feedbackModel.find({ ...queryObject, messageType: 'secret' });
         const personalFeedbacksCount = personalFeedbacks.length;
 
         // Fetch paginated feedbacks
@@ -131,11 +131,7 @@ export const getAdminAllFeedback = async (req, res) => {
         const personalFeedbacks = await feedbackModel.find({ ...combinedQueryObject, messageType: 'secret' });
         const personalFeedbacksCount = personalFeedbacks.length;
 
-        // Separating by category
-        const AcademicsFeedbacks = await feedbackModel.find({ ...combinedQueryObject, category: 'Academics' });
-        const FacilitiesFeedbacks = await feedbackModel.find({ ...combinedQueryObject, category: 'Facilities' });
-        const CampusLifeFeedbacks = await feedbackModel.find({ ...combinedQueryObject, category: 'Campus Life' });
-        const PersonalFeedbacks = await feedbackModel.find({ ...combinedQueryObject, category: 'Personal' });
+        console.log(personalFeedbacks);
 
         // Fetch paginated feedbacks
         const feeds = await feedbackModel.find(combinedQueryObject)
@@ -157,10 +153,6 @@ export const getAdminAllFeedback = async (req, res) => {
             personalFeedbacks,
             normalFeedbacksCount,
             personalFeedbacksCount,
-            // AcademicsFeedbacks,
-            // FacilitiesFeedbacks,
-            // CampusLifeFeedbacks,
-            // PersonalFeedbacks,
         });
 
     } catch (error) {
@@ -168,9 +160,6 @@ export const getAdminAllFeedback = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch the feedback", error: error.message });
     }
 };
-
-
-
 
 
 // to create the feedback 

@@ -4,10 +4,13 @@ import { BarChart2, MessageSquare, UserPlus, Bell, Users, Star, PieChart, Settin
 import customFetch from '../../utils/CustomFetch';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+// import LoadingPage from '../res/LoadingPage'
 
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [loading, setLoading] = useState(false);
+
     const [isOpen, setIsOpen] = useState(false);
 
     const menuItems = [
@@ -23,22 +26,28 @@ const Sidebar = () => {
 
     const isActive = (route) => location.pathname === route;
 
-    const handleItemClick = async(route) => {
-        if (route === '/admin-dashboard/logout'){
+    const handleItemClick = async (route) => {
+        setLoading(true); // Start loading
+
+        if (route === '/admin-dashboard/logout') {
             try {
                 await customFetch.get("/auth/logout");
                 toast.success("Logout Successful");
-                Cookies.remove('tokens', { path: '/' }); // Specify the same path as when the cookie was set
+                Cookies.remove('tokens', { path: '/' });
                 navigate("/login-admin");
             } catch (error) {
                 toast.error(error?.response?.data?.msg);
             } finally {
-                setLoading(false); // Stop loading
+                setLoading(false); // Stop loading after logout attempt
             }
+        } else {
+            navigate(route);
+            setLoading(false); // Stop loading after navigation
         }
-        navigate(route);
+
         setIsOpen(false); // Close sidebar on mobile after navigation
     };
+
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -60,6 +69,9 @@ const Sidebar = () => {
 
     return (
         <>
+
+            {/* Show LoadingPage if loading */}
+            {/* {loading && <LoadingPage />} */}
             {/* Mobile menu button */}
             <button
                 className="fixed top-4 left-4 z-50 md:hidden  text-white p-2 rounded-md"

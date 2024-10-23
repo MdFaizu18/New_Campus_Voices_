@@ -18,8 +18,13 @@ export default function AdminFeatureManagement() {
         const response = await customFetch.get('/dashboard-admin/feature');
         setFeatures(response.data); // Adjust based on your API structure
       } catch (error) {
-        console.error('Failed to fetch features', error);
-        toast.error('Failed to load features.');
+        if (error.response && error.response.status === 403) {
+          toast.error("Access Denied, Admin have to log in !!")
+          return redirect('/')
+        } else {
+          toast.error("Please Login !!")
+          return redirect('/')
+        }
       }
     };
     fetchFeatures();

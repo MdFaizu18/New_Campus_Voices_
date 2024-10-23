@@ -1,26 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, UserPlus, Star, Users, BarChart2, PieChart, Bell, Settings, Menu, X, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Zap } from 'lucide-react';
 import AdminSidebar from '../../components/res/AdminSidebar';
 import customFetch from '../../utils/CustomFetch';
+import LoadingPage from '../../components/res/LoadingPage';
 import { toast } from 'react-toastify';
-import { redirect } from 'react-router-dom';
+import { redirect, useNavigate } from 'react-router-dom';
+import FeedbackDistribution from '../../components/res/FeedbackDistribution';
+import FeedbackTrend from '../../components/res/FeedbackTrend';
+import EnhancedStaffPerformance from '../../components/res/EnhancedStaffPerformanceProps';
+
+
 
 export const loader = async () => {
     try {
-        const data = await customFetch.get('/dashboard-student/current-user');
-        return data;
+        const { data } = await customFetch.get('/dashboard-student/current-user');
+
+        // Check the user role
+        if (data && data.user.role === 'user') {  // Adjust 'user' based on your actual role value
+            return redirect('/student-dashboard');
+        }
+
+        return data; // Return the data if not redirecting
     } catch (error) {
         if (error.response && error.response.status === 403) {
-            toast.error("Please Login !!")
-            return redirect('/login-admin')
+            toast.error("Access Denied, Admin Please Login !!");
+            return redirect('/');
         } else {
-            toast.error("Please Login !!")
-            return redirect('/')
+            toast.error("Please Login !!");
+            return redirect('/');
         }
     }
-}
-
+};
 
 const StatCard = ({ icon: Icon, label, value, change }) => (
     <div className="bg-white p-6 rounded-lg shadow-md relative overflow-hidden">
@@ -44,7 +55,7 @@ const StatCard = ({ icon: Icon, label, value, change }) => (
     </div>
 );
 
-const FeedbackItem = ({ id, content, time, status, rating }) => (
+const FeedbackItem = ({ id, name,message,category  }) => (
     <motion.li
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,62 +65,82 @@ const FeedbackItem = ({ id, content, time, status, rating }) => (
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-5"></div>
         <div className="flex justify-between items-start relative z-10">
             <div>
-                <p className="font-semibold">Feedback #{id}</p>
-                <p className="text-sm text-gray-500">{content}</p>
+                <p className="font-semibold"># {name}</p>
+                <p className="text-sm text-gray-500">{message}</p>
                 <div className="flex items-center mt-2">
-                    {[...Array(5)].map((_, i) => (
+                    {/* {[...Array(5)].map((_, i) => (
                         <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                    ))}
+                    ))} */}
                 </div>
             </div>
             <div className="text-right">
-                <span className="text-xs text-gray-400">{time}</span>
-                <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${status === 'New' ? 'bg-green-100 text-green-800' :
-                        status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-blue-100 text-blue-800'
-                    }`}>
-                    {status}
+                <span className={`ml-5 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800`}>
+                    {category.substring(0, 6)}..
                 </span>
             </div>
+
         </div>
     </motion.li>
 );
 
 export default function AdminDashboardPage() {
+
+    const [data, setData] = useState(null);
+    const [feeds, setFeeds] = useState(null);
+    const [staffs, setStaffs] = useState(null);
+    const [users, setUsers] = useState(null);
+    const [departRatings, setDepartRatings] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    let currentAngle = 0;
+    let total =0;
+    const navigate = useNavigate();
+
     const [activeSection, setActiveSection] = useState('Dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [expandedCard, setExpandedCard] = useState(null);
 
-    // Mock data for charts (same as before)
-    const monthlyFeedbackData = [
-        { name: 'Jan', total: 120 },
-        { name: 'Feb', total: 150 },
-        { name: 'Mar', total: 180 },
-        { name: 'Apr', total: 220 },
-        { name: 'May', total: 250 },
-        { name: 'Jun', total: 280 },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await customFetch.get('/dashboard-student/current-user');
+                const users = await customFetch.get('/dashboard-student/current-user/count');
+                const feeds = await customFetch.get('/dashboard-admin/all-feedbacks');
+                const staffs = await customFetch.get('/dashboard-head/staff');
+                const departRatings = await customFetch.get('/depart-ratings');
 
-    const feedbackTypeData = [
-        { name: 'Academic', value: 40 },
-        { name: 'Facilities', value: 30 },
-        { name: 'Staff', value: 20 },
-        { name: 'Other', value: 10 },
-    ];
+                // Update state with fetched data
+                setData(data);
+                setUsers(users);
+                setFeeds(feeds);
+                setStaffs(staffs);
+                setDepartRatings(departRatings);
+            } catch (error) {
+              
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const recentFeedbacks = [
-        { id: 1, content: "The new library hours are great!", time: "2h ago", status: "New", rating: 5 },
-        { id: 2, content: "Can we have more vegan options in the cafeteria?", time: "4h ago", status: "In Progress", rating: 3 },
-        { id: 3, content: "The Wi-Fi in the dorms needs improvement.", time: "1d ago", status: "Resolved", rating: 2 },
-    ];
+        fetchData();
+    }, []);
 
-    const staffPerformanceData = [
-        { name: 'Prof. Smith', rating: 4.8, feedbacks: 120 },
-        { name: 'Dr. Johnson', rating: 4.5, feedbacks: 95 },
-        { name: 'Ms. Williams', rating: 4.2, feedbacks: 80 },
-        { name: 'Mr. Brown', rating: 4.0, feedbacks: 75 },
-        { name: 'Dr. Davis', rating: 3.9, feedbacks: 60 },
-    ];
+    if (loading) return <div><LoadingPage/></div>;
+    if (error) return <div>Error: {error.message}</div>;
+
+    const feedbacks = feeds.data.feeds;
+    const feedsTotal = feeds.data.feedsTotal;
+    const staffsTotal = staffs.data.TotalNoStaffs;
+    const usersTotal = users.data.userCount;
+    const departmentRatings = departRatings.data;
+    const overallRating = departmentRatings.totalRatingsCount
+        ? (departmentRatings.totalRating / departmentRatings.totalRatingsCount).toFixed(1)
+        : "0.0";
+
+    
+    console.log(staffs,"from feeds")
+
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -152,63 +183,27 @@ export default function AdminDashboardPage() {
                     <div className="max-w-7xl mx-auto space-y-6">
                         {/* Stats Overview */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <StatCard icon={MessageSquare} label="Total Feedbacks" value="1,234" change={5.2} />
-                            <StatCard icon={Users} label="Total Staff" value="56" change={2.1} />
-                            <StatCard icon={Star} label="Average Rating" value="4.7" change={-0.3} />
-                            <StatCard icon={UserPlus} label="New Users" value="28" change={12.5} />
+                            <StatCard icon={MessageSquare} label="Total Feedbacks" value={feedsTotal} change={5.2} />
+                            <StatCard icon={Users} label="Total Staff" value={staffsTotal} change={2.1} />
+                            <StatCard icon={Star} label="Average Rating" value={overallRating} change={-0.3} />
+                            <StatCard icon={UserPlus} label="New Users" value={usersTotal} change={12.5} />
                         </div>
 
-                        {/* Feedback Trend Chart */}
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold">Feedback Trend</h3>
-                                <button onClick={() => toggleCardExpansion('feedbackTrend')}>
-                                    {expandedCard === 'feedbackTrend' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </button>
-                            </div>
-                            <AnimatePresence>
-                                {(expandedCard === 'feedbackTrend' || expandedCard === null) && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center"
-                                    >
-                                        <p className="text-gray-500">Area Chart Placeholder</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                    
 
                         {/* Feedback Distribution and Recent Feedbacks */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div className="bg-white p-6 rounded-lg shadow-md">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-semibold">Feedback Distribution</h3>
-                                    <button onClick={() => toggleCardExpansion('feedbackDistribution')}>
-                                        {expandedCard === 'feedbackDistribution' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                                <AnimatePresence>
-                                    {(expandedCard === 'feedbackDistribution' || expandedCard === null) && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center"
-                                        >
-                                            <p className="text-gray-500">Donut Chart Placeholder</p>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                            <FeedbackDistribution feedbacks={feedbacks}/>
                             </div>
 
                             <div className="bg-white p-6 rounded-lg shadow-md">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-lg font-semibold">Recent Feedbacks</h3>
-                                    <button onClick={() => toggleCardExpansion('recentFeedbacks')}>
-                                        {expandedCard === 'recentFeedbacks' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    <button onClick={() => navigate('/admin-dashboard/view-feeds')}>
+                                        View All
                                     </button>
+
                                 </div>
                                 <AnimatePresence>
                                     {(expandedCard === 'recentFeedbacks' || expandedCard === null) && (
@@ -218,41 +213,31 @@ export default function AdminDashboardPage() {
                                             exit={{ opacity: 0, height: 0 }}
                                         >
                                             <ul className="space-y-4">
-                                                {recentFeedbacks.map((feedback) => (
-                                                    <FeedbackItem key={feedback.id} {...feedback} />
-                                                ))}
+                                                {feedbacks
+                                                    .filter(feedback => feedback.messageType !== 'secret') // Omit feedbacks with messageType 'secret'
+                                                    .slice(0, 4) // Get the first 3 feedback items that are not secret
+                                                    .map((feedback) => (
+                                                        <FeedbackItem key={feedback.id} {...feedback} />
+                                                    ))}
                                             </ul>
+
+
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
                             </div>
                         </div>
 
+                        {/* Feedback Trend Chart */}
+                        <div className="">
+                           <FeedbackTrend feedbacks={feedbacks}/>
+                        </div>
+
+
+
                         {/* Staff Performance */}
                         <div className="bg-white p-6 rounded-lg shadow-md">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold">Staff Performance</h3>
-                                <button onClick={() => toggleCardExpansion('staffPerformance')}>
-                                    {expandedCard === 'staffPerformance' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </button>
-                            </div>
-                            <AnimatePresence>
-                                {(expandedCard === 'staffPerformance' || expandedCard === null) && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                    >
-                                        <div className="flex space-x-2 mb-4">
-                                            <button className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">Rating</button>
-                                            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium">Feedbacks</button>
-                                        </div>
-                                        <div className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center">
-                                            <p className="text-gray-500">Bar Chart Placeholder</p>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                          <EnhancedStaffPerformance staffData={staffs.data.staffs}/>
                         </div>
 
                         {/* Quick Actions */}

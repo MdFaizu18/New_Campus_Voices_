@@ -35,9 +35,7 @@ import { action as registerAction } from './pages/RegisterPage';
 // importing loaders 
 import { loader as userProfileLoader } from './pages/student/UserProfile';
 import { loader as stdDashboardLoader } from './pages/student/MainDashBoardStudent';
-import { loader as adminDashboardLoader } from './pages/admin/AdminDashboardPage'
-// import { loader as feedLoader } from './pages/student/FeedPage';
-
+import { loader as adminLoader } from './pages/admin/AdminDashboardPage'
 
 // Define the router using createBrowserRouter
 const router = createBrowserRouter([
@@ -124,31 +122,37 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <AdminDashboardPage />,
-        loader: adminDashboardLoader
+        loader: adminLoader
       },
       {
         path: 'view-feeds',
         element: <ViewFeedbackPage />,
+        loader: adminLoader
       },
       {
         path: 'add-staff',
         element: <AddStaffPage />,
+        loader: adminLoader
       },
       {
         path: 'review-staff',
         element: <ReviewStaff />,
+        loader: adminLoader
       },
       {
         path: 'review-staff/:id',
         element: <EditStaffPage />,
+        loader: adminLoader
       },
       {
         path: 'star-ratings',
         element: <StarRatingsReview />,
+        loader: adminLoader
       },
       {
         path: 'add-feature',
         element: <AddFeaturePage />,
+        loader: adminLoader
       },
       {
         path: 'support',

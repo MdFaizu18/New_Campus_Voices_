@@ -95,6 +95,8 @@ export default function FeedPage() {
         fetchData();
     }, []);
 
+    console.log(data);
+
     if (loading) {
         return (
             <LoadingPage />
